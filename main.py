@@ -1,27 +1,66 @@
-import os
-import twitter
-from flask import Flask, jsonify
+from flask import Flask
+from flask import render_template, jsonify
+from info import data
+from stream_data import main
+import threading
+
+
+class Thread (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        main()
+
+
+# create application
 app = Flask(__name__)
+prev_list = list()
 
 
 @app.route('/')
-def main():
-    return 'c4v!'
+def index():
+    t = Thread()
+    t.start()
+    return 'Running'
 
 
-@app.route('/tweets')
-def list_tweets():
-    api = twitter.Api(
-        consumer_key=os.getenv('TWITTER_CONSUMER_KEY'),
-        consumer_secret=os.getenv('TWITTER_CONSUMER_SECRET'),
-        access_token_key=os.getenv('TWITTER_ACCESS_TOKEN_KEY'),
-        access_token_secret=os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
-    )
+@app.route('/data')
+def stream():
+    '''
+    GeoJSON Format
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "name": "Dinagat Islands"
+      }
+    }
+    '''
+    new_data = []
+    for item in data:
+        temp_data = {}
+        temp_data['geometry'] = {}
+        temp_data['properties'] = {}
+        temp_data['type'] = 'Feature'
+        temp_data['geometry']['type'] = 'Point'
+        temp_data['geometry']['coordinates'] = item['coordinates']['coordinates']
+        temp_data['properties']['name'] = item['text']
+        new_data.append(temp_data)
+    global prev_list
+    if prev_list == []:
+        prev_list = new_data[:]
+        return jsonify(new_data)
+    else:
+        d = []
+        for item in new_data:
+            if item not in prev_list:
+                d.append(item)
+        prev_list = new_data[:]
+        return jsonify(d)
 
-    tweets_list = api.GetSearch(raw_query='q=sinluz&count=5')
-
-    result = {}
-    for tweet in tweets_list:
-        result[tweet.id] = tweet.text
-
-    return jsonify(result)
+if __name__ == "__main__":
+    app.run(debug=True, threaded=True, host="0.0.0.0", port=5001)
