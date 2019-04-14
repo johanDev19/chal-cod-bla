@@ -1,6 +1,7 @@
 import os
+import twitter
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 app = Flask(__name__)
 load_dotenv()
 
@@ -12,5 +13,17 @@ def main():
 
 @app.route('/tweets')
 def list_tweets():
-    print(os.getenv('TWITTER_CONSUMER_KEY'))
-    return 'All ok!'
+    api = twitter.Api(
+        consumer_key=os.getenv('TWITTER_CONSUMER_KEY'),
+        consumer_secret=os.getenv('TWITTER_CONSUMER_SECRET'),
+        access_token_key=os.getenv('TWITTER_ACCESS_TOKEN_KEY'),
+        access_token_secret=os.getenv('TWITTER_ACCESS_TOKEN_SECRET')
+    )
+
+    tweets_list = api.GetSearch(raw_query='q=sinluz&count=5')
+
+    result = {}
+    for tweet in tweets_list:
+        result[tweet.id] = tweet.text
+
+    return jsonify(result)
