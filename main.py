@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask import render_template, jsonify
 from info import data
@@ -63,4 +64,4 @@ def stream():
         return jsonify(d)
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True, host="0.0.0.0", port=5001)
+    app.run(debug=True, threaded=True, host="0.0.0.0", port=os.getenv('TWITTER_CONSUMER_KEY'))
