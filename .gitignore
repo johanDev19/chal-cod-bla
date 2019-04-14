@@ -1,2 +1,5 @@
 # Dirs
 __pycache__
+
+# Files
+.env
