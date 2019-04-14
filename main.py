@@ -1,9 +1,7 @@
 import os
 import twitter
-from dotenv import load_dotenv
 from flask import Flask, jsonify
 app = Flask(__name__)
-load_dotenv()
 
 
 @app.route('/')
